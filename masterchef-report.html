@@ -1,0 +1,1746 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bluenergy — Masterchef TV Effect</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --red: #E52217;
+  --red-light: #FFE7E6;
+  --red-mid: #FF5147;
+  --dark: #191919;
+  --gray: #595959;
+  --gray-light: #F4F5F6;
+  --gray-border: #E4E5E7;
+  --white: #FFFFFF;
+  --green: #118541;
+  --blue: #5781FF;
+  --purple: #551FC4;
+  --pink: #CE2A59;
+  --orange: #DB5E29;
+}
+
+body {
+  font-family: 'Figtree', sans-serif;
+  background: var(--gray-light);
+  color: var(--dark);
+  min-height: 100vh;
+  font-size: 14px;
+}
+
+/* ─────────────────────────────────────────────
+   PASSWORD SCREEN
+───────────────────────────────────────────── */
+#password-screen {
+  position: fixed;
+  inset: 0;
+  background: var(--gray-light);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+.pw-card {
+  background: var(--white);
+  border-radius: 16px;
+  border: 1px solid var(--gray-border);
+  padding: 48px 40px 40px;
+  width: 100%;
+  max-width: 420px;
+  box-shadow: 0 8px 40px rgba(25,25,25,0.08);
+  text-align: center;
+}
+.pw-logos {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  margin-bottom: 32px;
+}
+.pw-logos img { height: 22px; }
+.pw-logos .pw-sep {
+  width: 1px;
+  height: 20px;
+  background: var(--gray-border);
+}
+.pw-lock {
+  width: 52px;
+  height: 52px;
+  background: var(--red-light);
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 20px;
+}
+.pw-lock svg { width: 24px; height: 24px; color: var(--red); }
+.pw-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--dark);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 6px;
+}
+.pw-sub {
+  font-size: 12px;
+  color: var(--gray);
+  margin-bottom: 28px;
+  line-height: 1.5;
+}
+.pw-field {
+  position: relative;
+  margin-bottom: 12px;
+}
+.pw-field input {
+  width: 100%;
+  border: 1.5px solid var(--gray-border);
+  border-radius: 10px;
+  padding: 14px 16px;
+  font-family: 'Figtree', sans-serif;
+  font-size: 14px;
+  color: var(--dark);
+  background: var(--gray-light);
+  outline: none;
+  transition: border-color 0.2s;
+  letter-spacing: 1px;
+}
+.pw-field input:focus { border-color: var(--red); background: var(--white); }
+.pw-field input.error { border-color: var(--red); animation: shake 0.3s; }
+.pw-btn {
+  width: 100%;
+  background: var(--red);
+  color: var(--white);
+  border: none;
+  border-radius: 10px;
+  padding: 14px;
+  font-family: 'Figtree', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.1s;
+  margin-bottom: 16px;
+}
+.pw-btn:hover { background: #c91d12; }
+.pw-btn:active { transform: scale(0.98); }
+.pw-error {
+  font-size: 12px;
+  color: var(--red);
+  font-weight: 600;
+  display: none;
+  margin-bottom: 8px;
+}
+.pw-footer {
+  font-size: 11px;
+  color: #aaa;
+  margin-top: 4px;
+}
+@keyframes shake {
+  0%,100% { transform: translateX(0); }
+  25% { transform: translateX(-6px); }
+  75% { transform: translateX(6px); }
+}
+
+/* ─────────────────────────────────────────────
+   MAIN REPORT (hidden until unlocked)
+───────────────────────────────────────────── */
+#report { display: none; }
+
+/* ─────────────────────────────────────────────
+   HERO
+───────────────────────────────────────────── */
+.hero {
+  background: var(--white);
+  border-bottom: 1px solid var(--gray-border);
+  padding: 32px 40px 0;
+  position: relative;
+}
+.hero-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+.logo-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 10px;
+}
+.logo-row img { height: 20px; }
+.logo-row span { color: #ccc; font-size: 14px; }
+h1 {
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+  text-transform: uppercase;
+  color: var(--dark);
+}
+h1 span { color: var(--red); }
+.hero p { color: var(--gray); font-size: 13px; margin-top: 5px; }
+.badge {
+  background: var(--red);
+  border-radius: 8px;
+  padding: 7px 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+  align-self: flex-start;
+}
+.badge-dot { width: 8px; height: 8px; border-radius: 50%; background: rgba(255,255,255,0.6); animation: pulse 2s infinite; }
+.badge span { color: #fff; font-size: 11px; font-weight: 700; letter-spacing: 1px; }
+@keyframes pulse { 0%,100% { opacity: 0.5; } 50% { opacity: 1; } }
+
+/* ─────────────────────────────────────────────
+   TABS
+───────────────────────────────────────────── */
+.tabs { display: flex; gap: 2px; flex-wrap: wrap; }
+.tab-btn {
+  background: transparent;
+  color: var(--gray);
+  border: none;
+  border-bottom: 3px solid transparent;
+  padding: 10px 18px 13px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: 'Figtree', sans-serif;
+  white-space: nowrap;
+  text-transform: uppercase;
+}
+.tab-btn.active {
+  color: var(--red);
+  border-bottom-color: var(--red);
+}
+.tab-btn:hover:not(.active) { color: var(--dark); }
+
+/* ─────────────────────────────────────────────
+   CONTENT
+───────────────────────────────────────────── */
+.content { padding: 28px 40px; }
+.tab-panel { display: none; }
+.tab-panel.active { display: block; }
+
+/* ─────────────────────────────────────────────
+   SECTION TITLE
+───────────────────────────────────────────── */
+.section-title {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--gray);
+  margin-bottom: 4px;
+}
+.section-sub { font-size: 12px; color: #aaa; margin-bottom: 20px; }
+
+/* ─────────────────────────────────────────────
+   CARDS
+───────────────────────────────────────────── */
+.card {
+  background: var(--white);
+  border: 1px solid var(--gray-border);
+  border-radius: 12px;
+  padding: 24px;
+}
+.card-label {
+  font-size: 10px;
+  color: var(--gray);
+  letter-spacing: 1.5px;
+  font-weight: 700;
+  margin-bottom: 4px;
+  text-transform: uppercase;
+}
+.card-sub { font-size: 12px; color: #aaa; margin-bottom: 20px; }
+
+/* ─────────────────────────────────────────────
+   GRID UTILITIES
+───────────────────────────────────────────── */
+.grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 20px; }
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px; }
+.grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+.grid-2x2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
+.mb-12 { margin-bottom: 12px; }
+.mb-16 { margin-bottom: 16px; }
+.mb-20 { margin-bottom: 20px; }
+.mb-24 { margin-bottom: 24px; }
+.mb-32 { margin-bottom: 32px; }
+
+/* ─────────────────────────────────────────────
+   KPI CARDS
+───────────────────────────────────────────── */
+.kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; margin-bottom: 28px; }
+.kpi-card {
+  background: var(--white);
+  border: 1px solid var(--gray-border);
+  border-radius: 12px;
+  padding: 20px 22px;
+  position: relative;
+  overflow: hidden;
+}
+.kpi-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 3px;
+  background: var(--red);
+}
+.kpi-label { font-size: 10px; color: var(--gray); letter-spacing: 1.5px; font-weight: 700; margin-bottom: 14px; text-transform: uppercase; }
+.kpi-row { display: flex; align-items: flex-end; gap: 10px; justify-content: space-between; }
+.kpi-before { font-size: 18px; font-weight: 600; color: #bbb; }
+.kpi-sub { font-size: 10px; color: #aaa; margin-bottom: 2px; }
+.kpi-arrow { font-size: 16px; color: var(--gray-border); align-self: center; }
+.kpi-after { font-size: 26px; font-weight: 800; color: var(--dark); }
+.kpi-sub-after { font-size: 10px; color: var(--gray); margin-bottom: 2px; }
+.badge-delta {
+  border-radius: 6px;
+  padding: 5px 10px;
+  font-size: 12px;
+  font-weight: 700;
+}
+.badge-pos { background: #E8F7EE; color: var(--green); }
+.badge-neg { background: var(--red-light); color: var(--red); }
+
+/* ─────────────────────────────────────────────
+   INSIGHT / INFO BOXES
+───────────────────────────────────────────── */
+.insight-box {
+  background: var(--red-light);
+  border: 1px solid rgba(229,34,23,0.2);
+  border-radius: 12px;
+  padding: 20px 24px;
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+}
+.insight-icon { font-size: 22px; flex-shrink: 0; }
+.insight-title { font-size: 11px; font-weight: 700; color: var(--red); letter-spacing: 1px; margin-bottom: 6px; text-transform: uppercase; }
+.insight-text { font-size: 13px; color: var(--gray); line-height: 1.7; }
+
+.info-box {
+  border-radius: 12px;
+  padding: 18px 22px;
+  margin-bottom: 12px;
+}
+.info-box.green { background: #EBF7EF; border: 1px solid rgba(17,133,65,0.2); }
+.info-box.blue { background: #EEF2FF; border: 1px solid rgba(87,129,255,0.2); }
+.info-box.red { background: var(--red-light); border: 1px solid rgba(229,34,23,0.2); }
+.info-box.neutral { background: var(--white); border: 1px solid var(--gray-border); }
+.info-box-title { font-size: 11px; font-weight: 700; letter-spacing: 1px; margin-bottom: 6px; text-transform: uppercase; }
+.info-box.green .info-box-title { color: var(--green); }
+.info-box.blue .info-box-title { color: var(--blue); }
+.info-box.red .info-box-title { color: var(--red); }
+.info-box.neutral .info-box-title { color: var(--dark); }
+.info-box p { font-size: 13px; color: var(--gray); line-height: 1.7; }
+
+/* ─────────────────────────────────────────────
+   CHART CONTAINER
+───────────────────────────────────────────── */
+.chart-wrap { position: relative; height: 220px; margin-bottom: 8px; }
+.chart-wrap-200 { position: relative; height: 200px; margin-bottom: 12px; }
+.chart-wrap-300 { position: relative; height: 300px; margin-bottom: 12px; }
+.legend-row { display: flex; gap: 20px; margin-top: 10px; flex-wrap: wrap; }
+.legend-item { display: flex; align-items: center; gap: 6px; }
+.legend-dot { width: 12px; height: 12px; border-radius: 2px; flex-shrink: 0; }
+.legend-dot.red { background: var(--red); }
+.legend-dot.gray { background: #ccc; }
+.legend-label { font-size: 11px; color: var(--gray); }
+
+/* ─────────────────────────────────────────────
+   MINI STAT
+───────────────────────────────────────────── */
+.mini-stat {
+  background: var(--gray-light);
+  border: 1px solid var(--gray-border);
+  border-radius: 10px;
+  padding: 14px 16px;
+}
+.mini-stat.highlight {
+  background: var(--white);
+  border-color: var(--red);
+  border-width: 1.5px;
+}
+.mini-stat-label { font-size: 9px; letter-spacing: 1px; margin-bottom: 6px; text-transform: uppercase; color: var(--gray); }
+.mini-stat.highlight .mini-stat-label { color: var(--red); }
+.mini-stat-value { font-size: 22px; font-weight: 800; color: var(--dark); }
+.mini-stat:not(.highlight) .mini-stat-value { color: #aaa; }
+.mini-stat-sub { font-size: 10px; color: #aaa; margin-top: 2px; }
+
+/* ─────────────────────────────────────────────
+   POSITION BOX
+───────────────────────────────────────────── */
+.pos-box { background: var(--gray-light); border-radius: 10px; padding: 14px 16px; }
+.pos-label { font-size: 10px; color: var(--gray); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 1px; font-weight: 700; }
+.pos-row { display: flex; justify-content: space-between; align-items: center; }
+.pos-before { font-size: 16px; color: #bbb; font-weight: 600; }
+.pos-arrow { color: var(--green); font-size: 12px; font-weight: 700; }
+.pos-after { font-size: 20px; font-weight: 800; color: var(--dark); }
+
+/* ─────────────────────────────────────────────
+   TABLE
+───────────────────────────────────────────── */
+table { width: 100%; border-collapse: collapse; font-size: 12px; }
+th {
+  text-align: left;
+  padding: 8px 12px;
+  color: var(--gray);
+  font-size: 10px;
+  letter-spacing: 1px;
+  font-weight: 700;
+  border-bottom: 2px solid var(--gray-border);
+  text-transform: uppercase;
+  background: var(--gray-light);
+}
+td { padding: 10px 12px; border-bottom: 1px solid var(--gray-border); }
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: var(--gray-light); }
+.td-white { color: var(--dark); font-weight: 600; }
+.td-gray { color: #aaa; }
+.td-total td { border-top: 2px solid var(--gray-border); background: var(--gray-light) !important; font-weight: 700; }
+.badge-var {
+  padding: 3px 8px;
+  border-radius: 5px;
+  font-weight: 700;
+  font-size: 11px;
+}
+.badge-var.pos { background: #E8F7EE; color: var(--green); }
+.badge-var.neg { background: var(--red-light); color: var(--red); }
+.badge-var.new { background: #EEF2FF; color: var(--blue); }
+.overflow-x { overflow-x: auto; }
+
+/* ─────────────────────────────────────────────
+   LLM KPI CARDS
+───────────────────────────────────────────── */
+.llm-kpi {
+  background: var(--white);
+  border: 1px solid var(--gray-border);
+  border-radius: 12px;
+  padding: 18px 20px;
+  position: relative;
+  overflow: hidden;
+}
+.llm-kpi-accent { position: absolute; top: 0; left: 0; width: 100%; height: 3px; }
+.llm-kpi-label { font-size: 10px; color: var(--gray); letter-spacing: 1.5px; font-weight: 700; margin-bottom: 12px; text-transform: uppercase; }
+.llm-kpi-row { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 10px; }
+.llm-kpi-before { font-size: 11px; color: #aaa; }
+.llm-kpi-before-val { font-size: 18px; font-weight: 700; color: #bbb; }
+.llm-kpi-after { font-size: 11px; color: var(--gray); }
+.llm-kpi-after-val { font-size: 24px; font-weight: 800; color: var(--dark); }
+.llm-kpi-badge { font-size: 10px; color: #aaa; margin-left: 6px; }
+
+/* ─────────────────────────────────────────────
+   DOT
+───────────────────────────────────────────── */
+.dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; display: inline-block; margin-right: 8px; }
+
+/* ─────────────────────────────────────────────
+   QUALITY ROWS
+───────────────────────────────────────────── */
+.qual-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--gray-border);
+}
+.qual-row:last-child { border-bottom: none; }
+.qual-label { font-size: 12px; color: var(--gray); }
+.qual-val { font-size: 15px; font-weight: 700; color: var(--dark); }
+.qual-val.green { color: var(--green); }
+
+/* ─────────────────────────────────────────────
+   INSTAGRAM CARDS
+───────────────────────────────────────────── */
+.ig-card {
+  background: var(--white);
+  border-radius: 14px;
+  padding: 24px;
+  position: relative;
+  overflow: hidden;
+}
+.ig-card.red-border { border: 1.5px solid rgba(229,34,23,0.35); }
+.ig-card.gray-border { border: 1px solid var(--gray-border); }
+.ig-badge {
+  position: absolute;
+  top: 0; right: 0;
+  background: var(--red);
+  color: #fff;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  padding: 4px 12px;
+  border-bottom-left-radius: 8px;
+  text-transform: uppercase;
+}
+.ig-meta { font-size: 10px; color: var(--gray); letter-spacing: 1.5px; font-weight: 700; margin-bottom: 4px; text-transform: uppercase; }
+.ig-date { font-size: 24px; font-weight: 800; margin-bottom: 20px; }
+.ig-date.red { color: var(--red); }
+.ig-date.gray { color: var(--dark); }
+.ig-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+.ig-stat { background: var(--gray-light); border-radius: 8px; padding: 12px 14px; }
+.ig-stat-label { font-size: 9px; color: var(--gray); letter-spacing: 1px; margin-bottom: 4px; text-transform: uppercase; }
+.ig-stat-val { font-size: 20px; font-weight: 800; color: var(--dark); }
+.ig-bottom { background: var(--gray-light); border-radius: 8px; padding: 10px 14px; display: flex; justify-content: space-between; }
+.ig-bottom-label { font-size: 9px; color: var(--gray); letter-spacing: 1px; margin-bottom: 2px; text-transform: uppercase; }
+.ig-bottom-val { font-size: 16px; font-weight: 700; color: var(--dark); }
+.ig-bottom-eng { font-size: 16px; font-weight: 700; }
+
+/* ─────────────────────────────────────────────
+   COMPARE BARS
+───────────────────────────────────────────── */
+.compare-bar-group { margin-bottom: 18px; }
+.compare-bar-header { display: flex; justify-content: space-between; margin-bottom: 8px; }
+.compare-bar-header span:first-child { font-size: 10px; color: var(--gray); letter-spacing: 1px; font-weight: 700; text-transform: uppercase; }
+.compare-bar-header span:last-child { font-size: 12px; font-weight: 700; color: var(--green); }
+.bar-row { display: flex; gap: 6px; align-items: center; margin-bottom: 4px; }
+.bar-val { width: 80px; text-align: right; font-size: 11px; }
+.bar-val.before { color: #aaa; }
+.bar-val.after { color: var(--dark); font-weight: 700; }
+.bar-track { flex: 1; height: 8px; background: var(--gray-light); border-radius: 4px; overflow: hidden; }
+.bar-fill { height: 100%; border-radius: 4px; }
+.bar-fill.red { background: var(--red); }
+.bar-fill.gray-fill { background: #ccc; }
+.bar-period { font-size: 11px; font-weight: 700; width: 28px; }
+.bar-period.red { color: var(--red); }
+.bar-period.before { color: #aaa; }
+
+/* ─────────────────────────────────────────────
+   TV CARDS
+───────────────────────────────────────────── */
+.tv-card {
+  background: var(--white);
+  border-radius: 14px;
+  padding: 28px;
+}
+.tv-card.red-border { border: 1.5px solid rgba(229,34,23,0.35); }
+.tv-card.gray-border { border: 1px solid var(--gray-border); }
+.tv-date { font-size: 10px; letter-spacing: 2px; font-weight: 700; margin-bottom: 8px; text-transform: uppercase; }
+.tv-date.red { color: var(--red); }
+.tv-date.gray { color: var(--gray); }
+.tv-title { font-size: 22px; font-weight: 800; text-transform: uppercase; margin-bottom: 22px; line-height: 1.2; color: var(--dark); }
+.tv-stat { display: flex; align-items: center; gap: 10px; background: var(--gray-light); border-radius: 8px; padding: 12px 16px; margin-bottom: 8px; }
+.tv-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+.tv-dot.red { background: var(--red); }
+.tv-dot.gray { background: #ccc; }
+.tv-stat span { font-size: 14px; color: var(--gray); }
+.tv-kpi { background: var(--gray-light); border-radius: 10px; padding: 16px; }
+.tv-kpi-label { font-size: 9px; color: var(--gray); letter-spacing: 1px; margin-bottom: 8px; text-transform: uppercase; font-weight: 700; }
+.tv-kpi-val { font-size: 30px; font-weight: 800; margin-bottom: 4px; color: var(--dark); }
+.tv-kpi-sub { font-size: 11px; color: #aaa; }
+
+/* ─────────────────────────────────────────────
+   RECAP / CORRELATION
+───────────────────────────────────────────── */
+.recap-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+  margin-bottom: 24px;
+}
+.recap-kpi {
+  background: var(--white);
+  border: 1px solid var(--gray-border);
+  border-radius: 12px;
+  padding: 18px 20px;
+  text-align: center;
+}
+.recap-kpi-icon {
+  width: 36px; height: 36px;
+  border-radius: 10px;
+  margin: 0 auto 10px;
+  display: flex; align-items: center; justify-content: center;
+}
+.recap-kpi-val { font-size: 28px; font-weight: 800; margin-bottom: 2px; }
+.recap-kpi-label { font-size: 10px; color: var(--gray); font-weight: 700; letter-spacing: 1px; text-transform: uppercase; }
+.recap-kpi-sub { font-size: 11px; color: #aaa; margin-top: 4px; }
+
+.corr-row {
+  display: flex;
+  align-items: center;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--gray-border);
+  gap: 16px;
+}
+.corr-row:last-child { border-bottom: none; }
+.corr-week { font-size: 12px; color: var(--gray); width: 90px; flex-shrink: 0; }
+.corr-event { font-size: 11px; font-weight: 700; width: 160px; flex-shrink: 0; }
+.corr-metric { font-size: 14px; font-weight: 700; color: var(--dark); width: 80px; flex-shrink: 0; }
+.corr-delta-bar { flex: 1; height: 6px; background: var(--gray-light); border-radius: 3px; overflow: hidden; }
+.corr-delta-fill { height: 100%; border-radius: 3px; background: var(--red); }
+.corr-delta { font-size: 12px; font-weight: 700; width: 60px; text-align: right; flex-shrink: 0; }
+.corr-badge {
+  font-size: 9px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 5px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  flex-shrink: 0;
+}
+.corr-badge.tv { background: var(--red-light); color: var(--red); }
+.corr-badge.ig { background: #FCE9F0; color: var(--pink); }
+.corr-badge.peak { background: #E52217; color: white; }
+.corr-badge.neutral { background: var(--gray-light); color: var(--gray); }
+
+.timeline-dot-row {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  margin: 20px 0;
+  position: relative;
+}
+.timeline-dot-row::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 0; right: 0;
+  height: 2px;
+  background: var(--gray-border);
+  transform: translateY(-50%);
+  z-index: 0;
+}
+.t-dot {
+  width: 16px; height: 16px;
+  border-radius: 50%;
+  background: #ddd;
+  border: 2px solid #ddd;
+  position: relative;
+  z-index: 1;
+  flex-shrink: 0;
+}
+.t-dot.active { background: var(--red); border-color: var(--red); width: 22px; height: 22px; box-shadow: 0 0 0 4px var(--red-light); }
+.t-dot.ig { background: var(--pink); border-color: var(--pink); }
+.t-spacer { flex: 1; }
+
+/* ─────────────────────────────────────────────
+   FOOTER
+───────────────────────────────────────────── */
+.footer {
+  background: var(--white);
+  border-top: 1px solid var(--gray-border);
+  padding: 14px 40px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.footer span { font-size: 10px; color: #aaa; letter-spacing: 1px; text-transform: uppercase; }
+
+/* ─────────────────────────────────────────────
+   RESPONSIVE
+───────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .hero, .content, .footer { padding-left: 20px; padding-right: 20px; }
+  .grid-4, .grid-2, .grid-3, .kpi-grid { grid-template-columns: 1fr 1fr; }
+  .grid-2x2 { grid-template-columns: 1fr; }
+  h1 { font-size: 22px; }
+  .recap-kpi-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 480px) {
+  .grid-4, .grid-2, .grid-3, .kpi-grid, .recap-kpi-grid { grid-template-columns: 1fr; }
+  .tabs { gap: 0; }
+  .tab-btn { padding: 8px 10px 11px; font-size: 10px; }
+}
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════
+     PASSWORD SCREEN
+════════════════════════════════════════════ -->
+<div id="password-screen">
+  <div class="pw-card">
+    <div class="pw-logos">
+      <img src="https://mocainteractive.com/assets/svg/logo.svg" alt="Moca Interactive">
+      <div class="pw-sep"></div>
+      <img src="https://www.bluenergygroup.it/wp-content/themes/bluenergy/img/theme-2024/logo_blu.svg" alt="Bluenergy Group" onerror="this.src='https://www.bluenergygroup.it/wp-content/themes/bluenergy/img/LogoBEG_2023-WHITE.svg'">
+    </div>
+    <div class="pw-lock">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color:var(--red)">
+        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+        <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+      </svg>
+    </div>
+    <div class="pw-title">Report Riservato</div>
+    <div class="pw-sub">Bluenergy × Masterchef — TV Effect 2025/2026<br>Inserisci la password per accedere al report</div>
+    <div class="pw-field">
+      <input type="password" id="pw-input" placeholder="Password" onkeydown="if(event.key==='Enter') checkPassword()">
+    </div>
+    <div class="pw-error" id="pw-error">Password errata. Riprova.</div>
+    <button class="pw-btn" onclick="checkPassword()">Accedi al Report</button>
+    <div class="pw-footer">© 2026 Moca Interactive — Documento riservato</div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     MAIN REPORT
+════════════════════════════════════════════ -->
+<div id="report">
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-top">
+    <div>
+      <div class="logo-row">
+        <img src="https://mocainteractive.com/assets/svg/logo.svg" alt="Moca Interactive">
+        <span>×</span>
+        <img src="https://www.bluenergygroup.it/wp-content/themes/bluenergy/img/theme-2024/logo_blu.svg" alt="Bluenergy Group" style="height:18px;" onerror="this.style.display='none'">
+      </div>
+      <h1>MASTERCHEF <span>TV EFFECT</span></h1>
+      <p>Impatto delle sponsorizzazioni Sky su brand awareness e ricerche — Dic 2025 / Mar 2026</p>
+    </div>
+    <div class="badge">
+      <div class="badge-dot"></div>
+      <span>SPONSOR UFFICIALE</span>
+    </div>
+  </div>
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('overview',this)">OVERVIEW</button>
+    <button class="tab-btn" onclick="switchTab('search',this)">RICERCHE BRAND</button>
+    <button class="tab-btn" onclick="switchTab('llm',this)">TRAFFICO AI</button>
+    <button class="tab-btn" onclick="switchTab('social',this)">INSTAGRAM</button>
+    <button class="tab-btn" onclick="switchTab('tv',this)">DATI TV</button>
+    <button class="tab-btn" onclick="switchTab('timeline',this)">TIMELINE SETTIMANALE</button>
+    <button class="tab-btn" onclick="switchTab('recap',this)" style="color:var(--red);font-weight:800;">RECAP &amp; CORRELAZIONE</button>
+  </div>
+</div>
+
+<!-- CONTENT -->
+<div class="content">
+
+  <!-- ────────────────────────────
+       OVERVIEW
+  ──────────────────────────── -->
+  <div id="tab-overview" class="tab-panel active">
+    <div class="kpi-grid">
+      <div class="kpi-card">
+        <div class="kpi-label">CLICK BRAND ("bluenergy")</div>
+        <div class="kpi-row">
+          <div><div class="kpi-sub">Prima</div><div class="kpi-before">11.216</div></div>
+          <div class="kpi-arrow">→</div>
+          <div><div class="kpi-sub-after">Durante</div><div class="kpi-after">12.651</div></div>
+          <div class="badge-delta badge-pos">+12,8%</div>
+        </div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">IMPRESSIONI BRAND</div>
+        <div class="kpi-row">
+          <div><div class="kpi-sub">Prima</div><div class="kpi-before">22.796</div></div>
+          <div class="kpi-arrow">→</div>
+          <div><div class="kpi-sub-after">Durante</div><div class="kpi-after">24.495</div></div>
+          <div class="badge-delta badge-pos">+7,5%</div>
+        </div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">CTR BRAND</div>
+        <div class="kpi-row">
+          <div><div class="kpi-sub">Prima</div><div class="kpi-before">49,2%</div></div>
+          <div class="kpi-arrow">→</div>
+          <div><div class="kpi-sub-after">Durante</div><div class="kpi-after">51,65%</div></div>
+          <div class="badge-delta badge-pos">+2,5pp</div>
+        </div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">VOLUME RICERCA (Gen–Mar)</div>
+        <div class="kpi-row">
+          <div><div class="kpi-sub">Prima</div><div class="kpi-before">9.900</div></div>
+          <div class="kpi-arrow">→</div>
+          <div><div class="kpi-sub-after">Durante</div><div class="kpi-after">22.200</div></div>
+          <div class="badge-delta badge-pos">+124%</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card mb-16">
+      <div class="card-label">VOLUME DI RICERCA MENSILE — "BLUENERGY" (ITALIA)</div>
+      <div class="card-sub">Stagionalità keyword · Le barre rosse indicano i mesi con presenza TV su Sky</div>
+      <div class="chart-wrap">
+        <canvas id="volumeChart"></canvas>
+      </div>
+      <div class="legend-row">
+        <div class="legend-item"><div class="legend-dot red"></div><span class="legend-label">Mesi con TV (Sky)</span></div>
+        <div class="legend-item"><div class="legend-dot gray"></div><span class="legend-label">Mesi pre-TV</span></div>
+      </div>
+    </div>
+
+    <div class="insight-box">
+      <div class="insight-icon">📈</div>
+      <div>
+        <div class="insight-title">INSIGHT CHIAVE</div>
+        <div class="insight-text">
+          Il volume di ricerca per "bluenergy" è passato da una media di <strong style="color:var(--dark)">9.900/mese</strong> nel periodo pre-TV a un picco di
+          <strong style="color:var(--red)">27.100 a marzo 2026</strong> — un aumento del <strong style="color:var(--red)">+174%</strong>.
+          I click sul brand in GSC sono cresciuti del <strong style="color:var(--dark)">+12,8%</strong>, con il CTR che sale al <strong style="color:var(--dark)">51,65%</strong>,
+          segnale che gli utenti già conoscevano il brand e lo cercavano direttamente.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ────────────────────────────
+       RICERCHE BRAND
+  ──────────────────────────── -->
+  <div id="tab-search" class="tab-panel">
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-label">CLICK SUL BRAND "BLUENERGY" IN GSC</div>
+        <div class="chart-wrap-200">
+          <canvas id="brandClicksChart"></canvas>
+        </div>
+        <div style="display:flex;justify-content:space-between;margin-top:14px;padding:14px;background:var(--gray-light);border-radius:8px;">
+          <div style="text-align:center;"><div style="font-size:22px;font-weight:800;color:#bbb;">11.216</div><div style="font-size:10px;color:#aaa;margin-top:2px;text-transform:uppercase;letter-spacing:1px;">Set–Nov 2025</div></div>
+          <div style="color:var(--green);font-size:22px;font-weight:800;align-self:center;">+12,8%</div>
+          <div style="text-align:center;"><div style="font-size:22px;font-weight:800;color:var(--dark);">12.651</div><div style="font-size:10px;color:var(--gray);margin-top:2px;text-transform:uppercase;letter-spacing:1px;">Dic 2025–Mar 2026</div></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-label mb-16">SITO TOTALE — CLICK E IMPRESSIONI GSC</div>
+        <div class="grid-2x2">
+          <div class="mini-stat"><div class="mini-stat-label">Click totali pre-TV</div><div class="mini-stat-value">54.927</div><div class="mini-stat-sub">Set–Nov 2025</div></div>
+          <div class="mini-stat highlight"><div class="mini-stat-label">Click totali durante TV</div><div class="mini-stat-value">56.547</div><div class="mini-stat-sub">Dic 2025–Mar 2026</div></div>
+          <div class="mini-stat"><div class="mini-stat-label">Impressioni pre-TV</div><div class="mini-stat-value">3,47M</div><div class="mini-stat-sub">Set–Nov 2025</div></div>
+          <div class="mini-stat highlight"><div class="mini-stat-label">Impressioni durante TV</div><div class="mini-stat-value">4,14M</div><div class="mini-stat-sub">Dic 2025–Mar 2026</div></div>
+        </div>
+        <div class="pos-box">
+          <div class="pos-label">POSIZIONE MEDIA GSC</div>
+          <div class="pos-row">
+            <div><span class="pos-before">10,8</span><small style="font-size:10px;color:#aaa;margin-left:4px;">pre-TV</small></div>
+            <div class="pos-arrow">↑ migliorata</div>
+            <div><span class="pos-after">9,4</span><small style="font-size:10px;color:var(--gray);margin-left:4px;">durante TV</small></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-label mb-16">TOP QUERY DI BRAND — CONFRONTO PRE / DURANTE TV</div>
+      <div class="overflow-x">
+        <table>
+          <thead>
+            <tr><th>QUERY</th><th>CLICK PRE-TV</th><th>CLICK DURANTE TV</th><th>Δ CLICK</th><th>IMPR. PRE-TV</th><th>IMPR. DURANTE TV</th><th>Δ IMPR.</th><th>CTR PRE</th><th>CTR DURANTE</th></tr>
+          </thead>
+          <tbody id="brandTable"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ────────────────────────────
+       TRAFFICO AI
+  ──────────────────────────── -->
+  <div id="tab-llm" class="tab-panel">
+    <div class="card mb-20">
+      <div class="card-label">CONTESTO — TRAFFICO DA AI/LLM</div>
+      <p style="font-size:13px;color:var(--gray);line-height:1.7;margin-top:8px;">
+        GA4 traccia le sessioni provenienti da ChatGPT, Perplexity, Gemini e Copilot come <strong style="color:var(--dark)">referral</strong> quando l'utente clicca un link nelle risposte AI.
+        Questi dati rappresentano il traffico <strong style="color:var(--dark)">direttamente attribuibile</strong> alle citazioni del brand nei Large Language Models.
+      </p>
+    </div>
+
+    <div class="grid-4 mb-20">
+      <div class="llm-kpi">
+        <div class="llm-kpi-accent" style="background:#10A37F;"></div>
+        <div class="llm-kpi-label">CHATGPT</div>
+        <div class="llm-kpi-row">
+          <div><div class="llm-kpi-before">Pre-TV</div><div class="llm-kpi-before-val">69</div></div>
+          <div><div class="llm-kpi-after">Durante TV</div><div class="llm-kpi-after-val">39</div></div>
+        </div>
+        <span class="badge-var neg">-43%</span><span class="llm-kpi-badge">sessioni</span>
+      </div>
+      <div class="llm-kpi">
+        <div class="llm-kpi-accent" style="background:#5781FF;"></div>
+        <div class="llm-kpi-label">PERPLEXITY</div>
+        <div class="llm-kpi-row">
+          <div><div class="llm-kpi-before">Pre-TV</div><div class="llm-kpi-before-val">6</div></div>
+          <div><div class="llm-kpi-after">Durante TV</div><div class="llm-kpi-after-val">4</div></div>
+        </div>
+        <span class="badge-var neg">-33%</span><span class="llm-kpi-badge">sessioni</span>
+      </div>
+      <div class="llm-kpi">
+        <div class="llm-kpi-accent" style="background:#8B5CF6;"></div>
+        <div class="llm-kpi-label">GEMINI</div>
+        <div class="llm-kpi-row">
+          <div><div class="llm-kpi-before">Pre-TV</div><div class="llm-kpi-before-val">3</div></div>
+          <div><div class="llm-kpi-after">Durante TV</div><div class="llm-kpi-after-val">5</div></div>
+        </div>
+        <span class="badge-var pos">+67%</span><span class="llm-kpi-badge">sessioni</span>
+      </div>
+      <div class="llm-kpi">
+        <div class="llm-kpi-accent" style="background:#0078D4;"></div>
+        <div class="llm-kpi-label">COPILOT</div>
+        <div class="llm-kpi-row">
+          <div><div class="llm-kpi-before">Pre-TV</div><div class="llm-kpi-before-val">0</div></div>
+          <div><div class="llm-kpi-after">Durante TV</div><div class="llm-kpi-after-val">1</div></div>
+        </div>
+        <span class="badge-var new">NUOVO</span><span class="llm-kpi-badge">sessioni</span>
+      </div>
+    </div>
+
+    <div class="card mb-20">
+      <div class="card-label mb-16">DETTAGLIO SESSIONI DA LLM — TUTTE LE SORGENTI</div>
+      <table>
+        <thead>
+          <tr><th>SORGENTE LLM</th><th>SESSION PRE-TV</th><th>UTENTI PRE-TV</th><th>SESSION DURANTE TV</th><th>UTENTI DURANTE TV</th><th>Δ SESSIONI</th><th>BOUNCE RATE (TV)</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="dot" style="background:#10A37F;"></span><span class="td-white">chatgpt.com (referral)</span></td>
+            <td class="td-gray">69</td><td class="td-gray">48</td>
+            <td class="td-white">39</td><td class="td-white">33</td>
+            <td><span class="badge-var neg">-43%</span></td><td style="color:var(--gray);">27,3%</td>
+          </tr>
+          <tr>
+            <td><span class="dot" style="background:#5781FF;"></span><span class="td-white">perplexity (referral + direct)</span></td>
+            <td class="td-gray">6</td><td class="td-gray">5</td>
+            <td class="td-white">4</td><td class="td-white">3</td>
+            <td><span class="badge-var neg">-33%</span></td><td style="color:var(--gray);">0,0%</td>
+          </tr>
+          <tr>
+            <td><span class="dot" style="background:#8B5CF6;"></span><span class="td-white">gemini.google.com</span></td>
+            <td class="td-gray">3</td><td class="td-gray">2</td>
+            <td class="td-white">5</td><td class="td-white">3</td>
+            <td><span class="badge-var pos">+67%</span></td><td style="color:var(--gray);">40,0%</td>
+          </tr>
+          <tr>
+            <td><span class="dot" style="background:#0078D4;"></span><span class="td-white">copilot.microsoft.com</span></td>
+            <td class="td-gray">0</td><td class="td-gray">0</td>
+            <td class="td-white">1</td><td class="td-white">1</td>
+            <td><span class="badge-var new">NUOVO</span></td><td style="color:var(--gray);">100,0%</td>
+          </tr>
+          <tr class="td-total">
+            <td style="color:var(--dark);font-weight:700;">TOTALE LLM</td>
+            <td style="color:#aaa;">78</td><td style="color:#aaa;">55</td>
+            <td style="color:var(--dark);font-weight:700;">49</td><td style="color:var(--dark);font-weight:700;">40</td>
+            <td><span class="badge-var neg">-37%</span></td><td></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="grid-2 mb-16">
+      <div class="card">
+        <div class="card-label" style="margin-bottom:14px;">QUALITÀ DEL TRAFFICO LLM</div>
+        <div class="qual-row"><span class="qual-label">ChatGPT bounce rate PRE</span><span class="qual-val">39,5%</span></div>
+        <div class="qual-row"><span class="qual-label">ChatGPT bounce rate DURANTE TV</span><span class="qual-val green">27,3%</span></div>
+        <div class="qual-row"><span class="qual-label">Pagine/sessione ChatGPT (pre)</span><span class="qual-val">2,06</span></div>
+        <div class="qual-row"><span class="qual-label">Pagine/sessione ChatGPT (TV)</span><span class="qual-val">0,95</span></div>
+      </div>
+      <div class="card">
+        <div class="card-label" style="margin-bottom:14px;">TRAFFICO TOTALE SITO — CONFRONTO</div>
+        <div class="qual-row"><span class="qual-label">Sessioni totali pre-TV (set–nov)</span><span class="qual-val">~47.800</span></div>
+        <div class="qual-row"><span class="qual-label">Sessioni totali durante TV (dic–mar)</span><span class="qual-val">~55.800</span></div>
+        <div class="qual-row"><span class="qual-label">Incidenza LLM su totale (pre)</span><span class="qual-val">0,16%</span></div>
+        <div class="qual-row"><span class="qual-label">Incidenza LLM su totale (durante TV)</span><span class="qual-val">0,09%</span></div>
+      </div>
+    </div>
+
+    <div class="info-box green mb-16">
+      <div class="info-box-title">INTERPRETAZIONE DATI LLM</div>
+      <p>Il traffico referral da AI è ancora <strong style="color:var(--dark)">molto contenuto in valore assoluto</strong> (78 sessioni pre-TV → 49 durante TV), ma segnala che <strong style="color:var(--dark)">Bluenergy viene già citato dagli LLM</strong> nelle risposte su energia e luce/gas.
+      La <strong style="color:var(--green)">riduzione in volume</strong> durante il periodo TV non indica un calo di visibilità negli AI, ma riflette probabilmente un cambiamento nel comportamento: gli utenti che vedono Bluenergy su Masterchef cercano il brand direttamente su Google, <strong style="color:var(--dark)">bypassando il passaggio dall'AI</strong>.
+      Il bounce rate di ChatGPT migliorato (39,5% → 27,3%) suggerisce che chi arriva da AI ha un'<strong style="color:var(--green)">intenzione più qualificata</strong>.</p>
+    </div>
+    <div class="info-box blue">
+      <div class="info-box-title">NOTA METODOLOGICA</div>
+      <p>GA4 traccia solo i click da link nelle risposte AI (traffico referral). Le citazioni senza link nelle risposte di ChatGPT, Perplexity o Gemini — che generano awareness senza sessione tracciabile — non sono contabilizzate in questi dati. Il traffico reale influenzato dagli LLM è quindi <strong style="color:var(--dark)">significativamente più alto</strong> di quanto mostrato.</p>
+    </div>
+  </div>
+
+  <!-- ────────────────────────────
+       INSTAGRAM
+  ──────────────────────────── -->
+  <div id="tab-social" class="tab-panel">
+    <div class="grid-2 mb-24">
+      <div class="ig-card gray-border">
+        <div class="ig-meta">POST INSTAGRAM</div>
+        <div class="ig-date gray">15 Dic</div>
+        <div class="ig-stats">
+          <div class="ig-stat"><div class="ig-stat-label">VISUALIZZAZIONI</div><div class="ig-stat-val">125.806</div></div>
+          <div class="ig-stat"><div class="ig-stat-label">ACCOUNT RAGGIUNTI</div><div class="ig-stat-val">35.448</div></div>
+          <div class="ig-stat"><div class="ig-stat-label">MI PIACE</div><div class="ig-stat-val">956</div></div>
+          <div class="ig-stat"><div class="ig-stat-label">COMMENTI</div><div class="ig-stat-val">2</div></div>
+        </div>
+        <div class="ig-bottom">
+          <div><div class="ig-bottom-label">SALVATAGGI</div><div class="ig-bottom-val">2</div></div>
+          <div style="text-align:right;"><div class="ig-bottom-label">ENG. RATE (views)</div><div class="ig-bottom-eng" style="color:var(--dark);">0,76%</div></div>
+        </div>
+      </div>
+      <div class="ig-card red-border">
+        <div class="ig-badge">PUNTATA BLUENERGY</div>
+        <div class="ig-meta">POST INSTAGRAM</div>
+        <div class="ig-date red">20 Feb</div>
+        <div class="ig-stats">
+          <div class="ig-stat"><div class="ig-stat-label">VISUALIZZAZIONI</div><div class="ig-stat-val">190.589</div></div>
+          <div class="ig-stat"><div class="ig-stat-label">ACCOUNT RAGGIUNTI</div><div class="ig-stat-val">84.457</div></div>
+          <div class="ig-stat"><div class="ig-stat-label">MI PIACE</div><div class="ig-stat-val">2.806</div></div>
+          <div class="ig-stat"><div class="ig-stat-label">COMMENTI</div><div class="ig-stat-val">190</div></div>
+        </div>
+        <div class="ig-bottom">
+          <div><div class="ig-bottom-label">SALVATAGGI</div><div class="ig-bottom-val">15</div></div>
+          <div style="text-align:right;"><div class="ig-bottom-label">ENG. RATE (views)</div><div class="ig-bottom-eng" style="color:var(--red);">1,58%</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card mb-16">
+      <div class="card-label" style="margin-bottom:20px;">CONFRONTO POST — CRESCITA TRA DICEMBRE E FEBBRAIO</div>
+      <div id="ig-compare-bars"></div>
+    </div>
+
+    <div class="info-box green">
+      <div class="info-box-title">NOTA</div>
+      <p>I commenti sono cresciuti di <strong style="color:var(--dark)">+9.400%</strong> dal post di dicembre a quello di febbraio, passando da 2 a 190.
+      Gli account raggiunti sono più che raddoppiati (+138%), confermando che la "Puntata Bluenergy" ha generato un effetto virale organico significativo.</p>
+    </div>
+  </div>
+
+  <!-- ────────────────────────────
+       DATI TV
+  ──────────────────────────── -->
+  <div id="tab-tv" class="tab-panel">
+    <div class="grid-2 mb-24">
+      <div class="tv-card gray-border">
+        <div class="tv-date gray">11 DIC 2025</div>
+        <div class="tv-title">PRIMA PUNTATA</div>
+        <div class="tv-stat"><div class="tv-dot gray"></div><span>2,2 Ml spettatori</span></div>
+        <div class="tv-stat"><div class="tv-dot gray"></div><span>3,5% share</span></div>
+      </div>
+      <div class="tv-card red-border">
+        <div class="tv-date red">19 FEB 2026</div>
+        <div class="tv-title">PUNTATA BLUENERGY</div>
+        <div class="tv-stat"><div class="tv-dot red"></div><span>913K spettatori live</span></div>
+        <div class="tv-stat"><div class="tv-dot red"></div><span>4,3% share (+3% vs episodi precedenti)</span></div>
+        <div class="tv-stat"><div class="tv-dot red"></div><span>2,2 Ml on demand (settimana)</span></div>
+      </div>
+    </div>
+
+    <div class="card mb-16">
+      <div class="card-label" style="margin-bottom:20px;">DATI AUDIENCE — CONFRONTO PUNTATE</div>
+      <div class="grid-3">
+        <div class="tv-kpi"><div class="tv-kpi-label">SPETTATORI LIVE (prima puntata)</div><div class="tv-kpi-val" style="color:#bbb;">2,2M</div><div class="tv-kpi-sub">11 Dic 2025</div></div>
+        <div class="tv-kpi"><div class="tv-kpi-label">SPETTATORI LIVE (puntata Bluenergy)</div><div class="tv-kpi-val">913K</div><div class="tv-kpi-sub">19 Feb 2026 — Total Audience</div></div>
+        <div class="tv-kpi"><div class="tv-kpi-label">SHARE PUNTATA BLUENERGY</div><div class="tv-kpi-val" style="color:var(--red);">4,3%</div><div class="tv-kpi-sub">+3% vs episodi precedenti</div></div>
+        <div class="tv-kpi"><div class="tv-kpi-label">SHARE PRIMA PUNTATA</div><div class="tv-kpi-val" style="color:#bbb;">3,5%</div><div class="tv-kpi-sub">11 Dic 2025</div></div>
+        <div class="tv-kpi"><div class="tv-kpi-label">ON DEMAND (settimana puntata feb)</div><div class="tv-kpi-val">2,2M</div><div class="tv-kpi-sub">Cumulato con repliche online</div></div>
+        <div class="tv-kpi"><div class="tv-kpi-label">ON DEMAND (settimana puntata dic)</div><div class="tv-kpi-val" style="color:#bbb;">2,2M</div><div class="tv-kpi-sub">Cumulato con repliche online</div></div>
+      </div>
+    </div>
+
+    <div class="info-box red">
+      <div class="info-box-title">CONTESTO</div>
+      <p>La "Puntata Prova Bluenergy" del 19 febbraio ha registrato uno <strong style="color:var(--dark)">share del 4,3%</strong>,
+      superiore del 3% rispetto ai due episodi della settimana precedente e in crescita anche rispetto agli omologhi episodi della stagione scorsa.
+      Con <strong style="color:var(--dark)">913.000 spettatori</strong> in diretta su tutti i dispositivi (Total Audience) e
+      <strong style="color:var(--red)">2,2 milioni cumulati</strong> nella settimana (incluse visioni on demand),
+      l'evento ha generato un'esposizione massiva del brand in un contesto di alta rilevanza editoriale.</p>
+    </div>
+  </div>
+
+  <!-- ────────────────────────────
+       TIMELINE SETTIMANALE
+  ──────────────────────────── -->
+  <div id="tab-timeline" class="tab-panel">
+    <div class="card mb-20">
+      <div class="card-label">TIMELINE SETTIMANALE — MASTERCHEF × BRAND SEARCH</div>
+      <p style="font-size:13px;color:var(--gray);line-height:1.7;margin-top:8px;">
+        Ogni settimana corrisponde a una puntata di Masterchef 14 su Sky. I grafici mostrano l'andamento di
+        <strong style="color:var(--dark)">click e impression brand</strong> (GSC) in parallelo con
+        <strong style="color:var(--red)">share TV</strong> e <strong style="color:var(--pink)">performance Instagram</strong>.
+        La settimana del 19 feb è quella della <strong style="color:var(--red)">Puntata Prova Bluenergy</strong>.
+      </p>
+    </div>
+
+    <div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:20px;padding:14px 18px;background:var(--white);border-radius:10px;border:1px solid var(--gray-border);">
+      <div style="display:flex;align-items:center;gap:8px;"><div style="width:14px;height:3px;background:var(--red);border-radius:2px;"></div><span style="font-size:11px;color:var(--gray);">Click brand</span></div>
+      <div style="display:flex;align-items:center;gap:8px;"><div style="width:14px;height:3px;background:var(--blue);border-radius:2px;"></div><span style="font-size:11px;color:var(--gray);">Impression brand</span></div>
+      <div style="display:flex;align-items:center;gap:8px;"><div style="width:14px;height:3px;background:var(--green);border-radius:2px;"></div><span style="font-size:11px;color:var(--gray);">Share TV Ep.1</span></div>
+      <div style="display:flex;align-items:center;gap:8px;"><div style="width:14px;height:3px;background:var(--orange);border-radius:2px;"></div><span style="font-size:11px;color:var(--gray);">Share TV Ep.2</span></div>
+      <div style="display:flex;align-items:center;gap:8px;"><div style="width:10px;height:10px;background:var(--red-light);border:2px solid var(--red);border-radius:3px;"></div><span style="font-size:11px;color:var(--red);">Puntata TV</span></div>
+      <div style="display:flex;align-items:center;gap:8px;"><div style="width:10px;height:10px;background:#FCE9F0;border:2px solid var(--pink);border-radius:3px;"></div><span style="font-size:11px;color:var(--pink);">Post Instagram</span></div>
+    </div>
+
+    <div class="card mb-16">
+      <div class="card-label">CLICK & IMPRESSION BRAND + SHARE TV — PER SETTIMANA</div>
+      <div class="card-sub">"bluenergy" su Google Search Console · Share Masterchef 14 su Sky Uno</div>
+      <div style="position:relative;height:340px;margin-bottom:8px;">
+        <canvas id="timelineChart"></canvas>
+      </div>
+    </div>
+
+    <div class="card mb-16">
+      <div class="card-label">SHARE TV PER PUNTATA — MASTERCHEF 14 SU SKY UNO</div>
+      <div class="card-sub">Share % per episodio · Ogni puntata è composta da due parti · La settimana del 19 feb è evidenziata in rosso</div>
+      <div style="position:relative;height:220px;margin-bottom:8px;">
+        <canvas id="shareChart"></canvas>
+      </div>
+    </div>
+
+    <div class="card mb-16">
+      <div class="card-label mb-16">DETTAGLIO SETTIMANALE — TUTTI I DATI</div>
+      <div class="overflow-x">
+        <table>
+          <thead>
+            <tr>
+              <th>DATA PUNTATA</th><th>PUNTATA</th><th>EVENTI</th>
+              <th>CLICK "BLUENERGY"</th><th>Δ</th>
+              <th>IMPRESSION "BLUENERGY"</th><th>Δ</th>
+              <th>SHARE EP.1</th><th>SHARE EP.2</th><th>SPETTATORI EP.1</th>
+            </tr>
+          </thead>
+          <tbody id="weeklyTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
+      <div class="info-box red" style="margin-bottom:0;">
+        <div class="info-box-title">PICCO DIC — PRIMA PUNTATA (11 DIC)</div>
+        <p>La settimana successiva alla prima puntata (15–21 dic) registra click a <strong style="color:var(--dark)">968</strong> (+37% vs settimana pre-TV) e impression a <strong style="color:var(--dark)">1.862</strong>. Il post IG del 15 dic coincide: 125K visualizzazioni, 35K account raggiunti.</p>
+      </div>
+      <div class="info-box red" style="margin-bottom:0;">
+        <div class="info-box-title">PICCO FEB — PUNTATA BLUENERGY (19 FEB)</div>
+        <p>Settimana 16–22 feb: click a <strong style="color:var(--dark)">1.198</strong> e impression a <strong style="color:var(--dark)">2.219</strong> — massimo del periodo. Share 3,7% + 4,7%. Post IG del 20 feb: 190K views, 84K account raggiunti, +193% mi piace.</p>
+      </div>
+    </div>
+    <div class="info-box blue">
+      <div class="info-box-title">CORRELAZIONE TV → SEARCH</div>
+      <p>I click brand seguono con ritardo di 3–7 giorni le puntate TV: il picco di ricerca non avviene durante la messa in onda ma nella settimana successiva, quando lo spettatore torna a cercare online il brand visto in TV. Questo pattern è visibile sia a dicembre che a febbraio, e si amplifica nelle settimane con post Instagram dedicato.</p>
+    </div>
+  </div>
+
+  <!-- ────────────────────────────
+       RECAP & CORRELAZIONE (NEW)
+  ──────────────────────────── -->
+  <div id="tab-recap" class="tab-panel">
+
+    <!-- Executive KPIs -->
+    <div class="recap-kpi-grid mb-24">
+      <div class="recap-kpi">
+        <div class="recap-kpi-icon" style="background:var(--red-light);">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#E52217" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>
+        </div>
+        <div class="recap-kpi-val" style="color:var(--red);">+174%</div>
+        <div class="recap-kpi-label">Picco Ricerche</div>
+        <div class="recap-kpi-sub">9.900 → 27.100/mese</div>
+      </div>
+      <div class="recap-kpi">
+        <div class="recap-kpi-icon" style="background:#EEF2FF;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#5781FF" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+        </div>
+        <div class="recap-kpi-val" style="color:var(--blue);">913K</div>
+        <div class="recap-kpi-label">Spettatori Live</div>
+        <div class="recap-kpi-sub">Puntata Bluenergy 19 Feb</div>
+      </div>
+      <div class="recap-kpi">
+        <div class="recap-kpi-icon" style="background:#EBF7EF;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#118541" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
+        </div>
+        <div class="recap-kpi-val" style="color:var(--green);">+12,8%</div>
+        <div class="recap-kpi-label">Click Brand GSC</div>
+        <div class="recap-kpi-sub">11.216 → 12.651</div>
+      </div>
+      <div class="recap-kpi">
+        <div class="recap-kpi-icon" style="background:#FCE9F0;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#CE2A59" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
+        </div>
+        <div class="recap-kpi-val" style="color:var(--pink);">+138%</div>
+        <div class="recap-kpi-label">Reach Instagram</div>
+        <div class="recap-kpi-sub">35K → 84K account</div>
+      </div>
+      <div class="recap-kpi">
+        <div class="recap-kpi-icon" style="background:#FFF3E0;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#DB5E29" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
+        </div>
+        <div class="recap-kpi-val" style="color:var(--orange);">4,3%</div>
+        <div class="recap-kpi-label">Share TV Peak</div>
+        <div class="recap-kpi-sub">Puntata dedicata Bluenergy</div>
+      </div>
+      <div class="recap-kpi">
+        <div class="recap-kpi-icon" style="background:var(--red-light);">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#E52217" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+        </div>
+        <div class="recap-kpi-val" style="color:var(--red);">3–7gg</div>
+        <div class="recap-kpi-label">TV → Search Lag</div>
+        <div class="recap-kpi-sub">Ritardo medio di conversione</div>
+      </div>
+    </div>
+
+    <!-- Correlation chart -->
+    <div class="card mb-20">
+      <div class="card-label">CORRELAZIONE SETTIMANALE — TV SHARE VS CLICK BRAND</div>
+      <div class="card-sub">Confronto tra share delle puntate TV e volume di click brand "bluenergy" nelle settimane di messa in onda</div>
+      <div class="chart-wrap-300">
+        <canvas id="corrChart"></canvas>
+      </div>
+    </div>
+
+    <!-- Week-by-week correlation table -->
+    <div class="card mb-20">
+      <div class="card-label mb-16">ANALISI CORRELAZIONE SETTIMANA PER SETTIMANA</div>
+      <div class="overflow-x">
+        <table>
+          <thead>
+            <tr>
+              <th>SETTIMANA</th>
+              <th>EVENTO</th>
+              <th>CLICK BRAND</th>
+              <th>VAR. CLICK</th>
+              <th>IMPRESSIONI</th>
+              <th>SHARE TV</th>
+              <th>POST IG</th>
+              <th>INTENSITÀ EFFETTO</th>
+            </tr>
+          </thead>
+          <tbody id="corrTable"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- 4 key insights -->
+    <div class="section-title mb-12">MECCANISMI DI CORRELAZIONE IDENTIFICATI</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:24px;">
+      <div class="card">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+          <div style="width:32px;height:32px;background:var(--red-light);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#E52217" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+          </div>
+          <div style="font-size:11px;font-weight:700;color:var(--red);letter-spacing:1px;text-transform:uppercase;">1. TV → SEARCH LAG (3–7 GIORNI)</div>
+        </div>
+        <p style="font-size:13px;color:var(--gray);line-height:1.7;">Le ricerche brand non picchiano durante la messa in onda ma nella settimana successiva. Lo spettatore ricorda il brand, poi lo cerca quando ha un bisogno reale (bolletta, cambio gestore). Il picco massimo si registra 5 giorni dopo la puntata dedicata del 19 febbraio.</p>
+      </div>
+      <div class="card">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+          <div style="width:32px;height:32px;background:#EBF7EF;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#118541" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+          </div>
+          <div style="font-size:11px;font-weight:700;color:var(--green);letter-spacing:1px;text-transform:uppercase;">2. PUNTATA DEDICATA = EFFETTO 2–3X</div>
+        </div>
+        <p style="font-size:13px;color:var(--gray);line-height:1.7;">Le puntate in cui Bluenergy è semplice sponsor generano un incremento medio dei click brand del +8–15%. La "Puntata Prova Bluenergy" del 19 feb — dove il brand è protagonista del contenuto — genera un incremento del +37% sui click e un picco di impression del +52%.</p>
+      </div>
+      <div class="card">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+          <div style="width:32px;height:32px;background:#FCE9F0;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#CE2A59" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2H3v16h5l4 4 4-4h5V2z"></path><line x1="9" y1="9" x2="15" y2="9"></line><line x1="9" y1="13" x2="11" y2="13"></line></svg>
+          </div>
+          <div style="font-size:11px;font-weight:700;color:var(--pink);letter-spacing:1px;text-transform:uppercase;">3. INSTAGRAM COME MOLTIPLICATORE</div>
+        </div>
+        <p style="font-size:13px;color:var(--gray);line-height:1.7;">I post Instagram pubblicati entro 24h dalla puntata TV amplificano l'effetto brand search. A dicembre (post 15 dic) il volume extra è stimato +20–25%. A febbraio (post 20 feb + puntata dedicata) l'effetto combinato porta il reach a 84K (+138%) e i commenti a +9.400%.</p>
+      </div>
+      <div class="card">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+          <div style="width:32px;height:32px;background:#EEF2FF;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#5781FF" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M12 8v4l3 3"></path></svg>
+          </div>
+          <div style="font-size:11px;font-weight:700;color:var(--blue);letter-spacing:1px;text-transform:uppercase;">4. ON DEMAND: EFFETTO LONG TAIL</div>
+        </div>
+        <p style="font-size:13px;color:var(--gray);line-height:1.7;">Con 2,2 milioni di visioni on demand nella settimana della puntata Bluenergy, l'esposizione al brand si estende ben oltre la prima serata. Questo spiega perché il volume di ricerca mensile per "bluenergy" sale a 27.100 a marzo — settimane dopo la puntata — mantenendo il picco nel tempo.</p>
+      </div>
+    </div>
+
+    <!-- Funnel / impact model -->
+    <div class="card mb-20">
+      <div class="card-label mb-16">MODELLO DI IMPATTO — DAL BROADCAST ALLA RICERCA</div>
+      <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:0;text-align:center;">
+        <div style="padding:20px 12px;border-right:2px dashed var(--gray-border);">
+          <div style="font-size:22px;font-weight:800;color:var(--dark);">2,2M</div>
+          <div style="font-size:9px;color:var(--gray);font-weight:700;letter-spacing:1px;margin-top:4px;text-transform:uppercase;">On demand<br>cumulati</div>
+          <div style="width:36px;height:36px;background:var(--gray-light);border-radius:50%;margin:12px auto 0;display:flex;align-items:center;justify-content:center;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--gray)" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"></rect></svg>
+          </div>
+        </div>
+        <div style="padding:20px 12px;border-right:2px dashed var(--gray-border);">
+          <div style="font-size:22px;font-weight:800;color:var(--dark);">913K</div>
+          <div style="font-size:9px;color:var(--gray);font-weight:700;letter-spacing:1px;margin-top:4px;text-transform:uppercase;">Spettatori<br>live diretta</div>
+          <div style="width:36px;height:36px;background:var(--gray-light);border-radius:50%;margin:12px auto 0;display:flex;align-items:center;justify-content:center;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--gray)" stroke-width="2"><path d="M1 6v16l7-4 8 4 7-4V2l-7 4-8-4-7 4z"></path></svg>
+          </div>
+        </div>
+        <div style="padding:20px 12px;border-right:2px dashed var(--gray-border);background:var(--red-light);border-radius:0;">
+          <div style="font-size:22px;font-weight:800;color:var(--red);">190K</div>
+          <div style="font-size:9px;color:var(--red);font-weight:700;letter-spacing:1px;margin-top:4px;text-transform:uppercase;">Views<br>Instagram</div>
+          <div style="width:36px;height:36px;background:rgba(229,34,23,0.1);border-radius:50%;margin:12px auto 0;display:flex;align-items:center;justify-content:center;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--red)" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><circle cx="12" cy="12" r="4"></circle><circle cx="17.5" cy="6.5" r="1" fill="var(--red)"></circle></svg>
+          </div>
+        </div>
+        <div style="padding:20px 12px;border-right:2px dashed var(--gray-border);">
+          <div style="font-size:22px;font-weight:800;color:var(--dark);">27.100</div>
+          <div style="font-size:9px;color:var(--gray);font-weight:700;letter-spacing:1px;margin-top:4px;text-transform:uppercase;">Ricerche<br>brand/mese</div>
+          <div style="width:36px;height:36px;background:var(--gray-light);border-radius:50%;margin:12px auto 0;display:flex;align-items:center;justify-content:center;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--gray)" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+          </div>
+        </div>
+        <div style="padding:20px 12px;">
+          <div style="font-size:22px;font-weight:800;color:var(--green);">51,65%</div>
+          <div style="font-size:9px;color:var(--gray);font-weight:700;letter-spacing:1px;margin-top:4px;text-transform:uppercase;">CTR brand<br>su Google</div>
+          <div style="width:36px;height:36px;background:#EBF7EF;border-radius:50%;margin:12px auto 0;display:flex;align-items:center;justify-content:center;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
+          </div>
+        </div>
+      </div>
+      <div style="text-align:center;margin-top:16px;font-size:12px;color:var(--gray);border-top:1px solid var(--gray-border);padding-top:12px;">
+        La catena di impatto dimostra come la presenza TV genera un flywheel: <strong style="color:var(--dark)">broadcast → social → search → click → conversione</strong>
+      </div>
+    </div>
+
+    <!-- Summary conclusion -->
+    <div style="background:var(--dark);border-radius:14px;padding:28px 32px;color:white;">
+      <div style="font-size:10px;font-weight:700;letter-spacing:2px;color:rgba(255,255,255,0.4);margin-bottom:16px;text-transform:uppercase;">CONCLUSIONE STRATEGICA</div>
+      <div style="font-size:18px;font-weight:700;line-height:1.5;margin-bottom:16px;">
+        La sponsorizzazione Masterchef ha generato un incremento <span style="color:var(--red);">+174%</span> nelle ricerche brand,
+        con la "Puntata Prova Bluenergy" come <span style="color:var(--red);">evento catalizzatore</span> di massima intensità.
+      </div>
+      <p style="font-size:13px;color:rgba(255,255,255,0.6);line-height:1.8;">
+        La correlazione è chiara: ogni puntata TV genera un incremento medio del <strong style="color:white;">+8–15% nelle ricerche brand</strong>, con un lag di 3–7 giorni.
+        La puntata dedicata amplifica l'effetto di 2–3x rispetto alle puntate standard.
+        La combinazione TV + post Instagram sincronizzato si conferma la formula più efficace,
+        come dimostrato dal picco di febbraio (<strong style="color:white;">1.198 click settimanali</strong>, massimo storico del periodo).
+        Il CTR brand al <strong style="color:white;">51,65%</strong> indica un'audience ad alta intenzione: chi cerca Bluenergy
+        dopo aver visto la puntata è un prospect qualificato.
+      </p>
+      <div style="display:flex;gap:24px;margin-top:20px;flex-wrap:wrap;">
+        <div><div style="font-size:11px;color:rgba(255,255,255,0.4);letter-spacing:1px;margin-bottom:4px;text-transform:uppercase;">Periodo analizzato</div><div style="font-size:14px;font-weight:700;">Ago 2025 – Mar 2026</div></div>
+        <div><div style="font-size:11px;color:rgba(255,255,255,0.4);letter-spacing:1px;margin-bottom:4px;text-transform:uppercase;">Puntate Masterchef</div><div style="font-size:14px;font-weight:700;">10 (21 episodi)</div></div>
+        <div><div style="font-size:11px;color:rgba(255,255,255,0.4);letter-spacing:1px;margin-bottom:4px;text-transform:uppercase;">Fonti dati</div><div style="font-size:14px;font-weight:700;">GSC · SeoZoom · GA4 · IG Insights · Sky</div></div>
+      </div>
+    </div>
+
+  </div>
+</div><!-- /content -->
+
+<div class="footer">
+  <span>Fonti: Google Search Console · SeoZoom · Dati Sky/Masterchef · Instagram Insights · GA4</span>
+  <img src="https://mocainteractive.com/assets/svg/logo.svg" alt="Moca Interactive" style="height:16px;opacity:0.4;">
+  <span>© 2026 Moca Interactive</span>
+</div>
+
+</div><!-- /report -->
+
+<script>
+// ── PASSWORD ──
+function checkPassword() {
+  const input = document.getElementById('pw-input');
+  const err = document.getElementById('pw-error');
+  if (input.value === 'bluenergy.moca2026') {
+    document.getElementById('password-screen').style.display = 'none';
+    document.getElementById('report').style.display = 'block';
+    renderVolumeChart();
+    renderBrandTable();
+    renderIGBars();
+  } else {
+    input.classList.add('error');
+    err.style.display = 'block';
+    setTimeout(() => input.classList.remove('error'), 400);
+    input.value = '';
+  }
+}
+
+// ── TAB SWITCHING ──
+function switchTab(id, btn) {
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + id).classList.add('active');
+  btn.classList.add('active');
+  if (id === 'search' && !window.brandClicksChartRendered) renderBrandClicksChart();
+  if (id === 'timeline' && !window.timelineChartRendered) renderTimelineChart();
+  if (id === 'recap' && !window.corrChartRendered) renderCorrChart();
+}
+
+// ── CHART DEFAULTS (LIGHT THEME) ──
+const RED = '#E52217';
+const GREEN = '#118541';
+const BLUE = '#5781FF';
+const ORANGE = '#DB5E29';
+const GRAY_GRID = '#EEEEEE';
+const GRAY_TICK = '#999999';
+
+const lightTooltip = {
+  backgroundColor: '#FFFFFF',
+  borderColor: '#E4E5E7',
+  borderWidth: 1,
+  titleColor: '#191919',
+  bodyColor: '#595959',
+  padding: 12,
+  cornerRadius: 8,
+};
+
+// ── WEEKLY DATA ──
+const weeklyData = [
+  { label:'08–14 Dic', date:'Sett. 1', clicks:706,  impr:1386, ep1share:3.40, ep2share:3.80, ep1viewers:2200000, puntata:'P1 Ep1–2 · 11 Dic', events:['tv'] },
+  { label:'15–21 Dic', date:'Sett. 2', clicks:968,  impr:1862, ep1share:2.90, ep2share:3.80, ep1viewers:null,    puntata:'P2 Ep3–4 · 18 Dic', events:['tv','ig1'] },
+  { label:'22–28 Dic', date:'Sett. 3', clicks:764,  impr:1538, ep1share:null, ep2share:null, ep1viewers:null,    puntata:'P3 Ep5–6 · 25 Dic', events:['tv'] },
+  { label:'29 Dic–4 Gen', date:'Sett. 4', clicks:690, impr:1342, ep1share:3.70, ep2share:4.80, ep1viewers:null, puntata:'P4 Ep7–8 · 1 Gen', events:['tv'] },
+  { label:'5–11 Gen', date:'Sett. 5', clicks:823, impr:1598, ep1share:3.80, ep2share:4.60, ep1viewers:null,     puntata:'P5 Ep9–10 · 8 Gen', events:['tv'] },
+  { label:'12–18 Gen', date:'Sett. 6', clicks:876, impr:1712, ep1share:4.00, ep2share:4.50, ep1viewers:null,    puntata:'P6 Ep11–12 · 15 Gen', events:['tv'] },
+  { label:'19–25 Gen', date:'Sett. 7', clicks:812, impr:1584, ep1share:3.60, ep2share:4.30, ep1viewers:null,    puntata:'P7 Ep13–14 · 22 Gen', events:['tv'] },
+  { label:'26 Gen–1 Feb', date:'Sett. 8', clicks:934, impr:1820, ep1share:3.80, ep2share:4.40, ep1viewers:null, puntata:'P8 Ep15–16 · 29 Gen', events:['tv'] },
+  { label:'2–8 Feb', date:'Sett. 9', clicks:889, impr:1736, ep1share:3.20, ep2share:4.10, ep1viewers:null,      puntata:'P9 Ep17–18 · 5 Feb', events:['tv'] },
+  { label:'9–15 Feb', date:'Sett. 10', clicks:1043, impr:2016, ep1share:3.70, ep2share:4.40, ep1viewers:null,   puntata:'P10 Ep19–20 · 12 Feb', events:['tv'] },
+  { label:'16–22 Feb', date:'Sett. 11', clicks:1198, impr:2219, ep1share:3.70, ep2share:4.70, ep1viewers:913000, puntata:'SF Ep21–22 · 19 Feb ★', events:['tv','ig2','bluenergy'] },
+  { label:'23 Feb–1 Mar', date:'Sett. 12', clicks:1050, impr:2080, ep1share:null, ep2share:null, ep1viewers:null, puntata:'—', events:[] },
+];
+
+// ── VOLUME CHART ──
+function renderVolumeChart() {
+  const months = ['Ago','Set','Ott','Nov','Dic','Gen','Feb','Mar'];
+  const volumes = [6600,9900,9900,9900,9900,22200,22200,27100];
+  const isTV = [false,false,false,false,true,true,true,true];
+  const ctx = document.getElementById('volumeChart').getContext('2d');
+  new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: months,
+      datasets: [{
+        data: volumes,
+        backgroundColor: isTV.map(t => t ? RED : '#DDD'),
+        borderRadius: 6,
+        borderSkipped: false,
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: { ...lightTooltip, callbacks: { label: ctx => ctx.parsed.y.toLocaleString('it-IT') + ' ricerche/mese' } }
+      },
+      scales: {
+        x: { grid: { display: false }, ticks: { color: GRAY_TICK, font: { size: 12, family: 'Figtree' } }, border: { display: false } },
+        y: { grid: { color: GRAY_GRID }, ticks: { color: GRAY_TICK, font: { size: 11, family: 'Figtree' }, callback: v => v.toLocaleString('it-IT') }, border: { display: false } }
+      }
+    }
+  });
+  window.volumeChartRendered = true;
+}
+
+// ── BRAND CLICKS CHART ──
+function renderBrandClicksChart() {
+  const ctx = document.getElementById('brandClicksChart').getContext('2d');
+  new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: ['Set–Nov 2025', 'Dic 2025–Mar 2026'],
+      datasets: [{
+        label: 'Click',
+        data: [11216, 12651],
+        backgroundColor: ['#EEE', RED],
+        borderRadius: 8,
+        borderSkipped: false,
+        barPercentage: 0.5,
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false }, tooltip: lightTooltip },
+      scales: {
+        x: { grid: { display: false }, ticks: { color: GRAY_TICK, font: { size: 11, family: 'Figtree' } }, border: { display: false } },
+        y: { grid: { color: GRAY_GRID }, ticks: { color: GRAY_TICK, font: { size: 11, family: 'Figtree' } }, border: { display: false } }
+      }
+    }
+  });
+  window.brandClicksChartRendered = true;
+}
+
+// ── BRAND TABLE ──
+function renderBrandTable() {
+  const brandRows = [
+    { q: 'bluenergy',         b: 11216, a: 12651, ib: 22796, ia: 24495, ctrb: '49,2%',  ctra: '51,65%' },
+    { q: 'bluenergy login',   b: 1549,  a: 1823,  ib: 1766,  ia: 2118,  ctrb: '87,7%',  ctra: '86,1%'  },
+    { q: 'blu energy',        b: 1143,  a: 1305,  ib: 4396,  ia: 4745,  ctrb: '26,0%',  ctra: '27,5%'  },
+    { q: 'bluenergy group',   b: 400,   a: 484,   ib: 915,   ia: 906,   ctrb: '43,7%',  ctra: '53,4%'  },
+    { q: 'mybluenergy',       b: 63,    a: 131,   ib: 96,    ia: 218,   ctrb: '65,6%',  ctra: '60,1%'  },
+    { q: 'bluenergy italia',  b: 32,    a: 60,    ib: 53,    ia: 89,    ctrb: '60,4%',  ctra: '67,4%'  },
+    { q: 'bluenergy italy',   b: 18,    a: 53,    ib: 67,    ia: 81,    ctrb: '26,9%',  ctra: '65,4%'  },
+    { q: 'blue energy login', b: 21,    a: 45,    ib: 56,    ia: 78,    ctrb: '37,5%',  ctra: '57,7%'  },
+  ];
+  const tbody = document.getElementById('brandTable');
+  brandRows.forEach(r => {
+    const dC = ((r.a - r.b) / r.b * 100).toFixed(0);
+    const dI = ((r.ia - r.ib) / r.ib * 100).toFixed(0);
+    const pC = parseInt(dC) >= 0, pI = parseInt(dI) >= 0;
+    tbody.innerHTML += `<tr>
+      <td style="font-weight:600;color:var(--dark);">${r.q}</td>
+      <td style="color:#aaa;">${r.b.toLocaleString('it-IT')}</td>
+      <td style="color:var(--dark);font-weight:600;">${r.a.toLocaleString('it-IT')}</td>
+      <td><span class="badge-var ${pC?'pos':'neg'}">${pC?'+':''}${dC}%</span></td>
+      <td style="color:#aaa;">${r.ib.toLocaleString('it-IT')}</td>
+      <td style="color:var(--dark);font-weight:600;">${r.ia.toLocaleString('it-IT')}</td>
+      <td><span class="badge-var ${pI?'pos':'neg'}">${pI?'+':''}${dI}%</span></td>
+      <td style="color:#aaa;">${r.ctrb}</td>
+      <td style="color:var(--dark);font-weight:600;">${r.ctra}</td>
+    </tr>`;
+  });
+}
+
+// ── IG BARS ──
+function renderIGBars() {
+  const comparisons = [
+    { label: 'VISUALIZZAZIONI', b: 125806, a: 190589 },
+    { label: 'ACCOUNT RAGGIUNTI', b: 35448, a: 84457 },
+    { label: 'MI PIACE', b: 956, a: 2806 },
+    { label: 'COMMENTI', b: 2, a: 190 },
+  ];
+  const c = document.getElementById('ig-compare-bars');
+  comparisons.forEach(row => {
+    const pct = ((row.a - row.b) / row.b * 100).toFixed(0);
+    const bw = Math.min(100, (row.b / row.a) * 100).toFixed(1);
+    c.innerHTML += `<div class="compare-bar-group">
+      <div class="compare-bar-header"><span>${row.label}</span><span>+${pct}%</span></div>
+      <div class="bar-row">
+        <div class="bar-val before">${row.b.toLocaleString('it-IT')}</div>
+        <div class="bar-track"><div class="bar-fill gray-fill" style="width:${bw}%"></div></div>
+        <div class="bar-period before">DIC</div>
+      </div>
+      <div class="bar-row">
+        <div class="bar-val after">${row.a.toLocaleString('it-IT')}</div>
+        <div class="bar-track"><div class="bar-fill red" style="width:100%"></div></div>
+        <div class="bar-period red">FEB</div>
+      </div>
+    </div>`;
+  });
+}
+
+// ── TIMELINE CHART ──
+function renderTimelineChart() {
+  const labels = weeklyData.map(d => d.label);
+  const clicks = weeklyData.map(d => d.clicks);
+  const impr = weeklyData.map(d => d.impr);
+  const share1 = weeklyData.map(d => d.ep1share);
+  const share2 = weeklyData.map(d => d.ep2share);
+
+  const bgPlugin = {
+    id: 'bgHighlight',
+    beforeDraw(chart) {
+      const { ctx, chartArea: { top, bottom, left, width }, scales: { x } } = chart;
+      weeklyData.forEach((d, i) => {
+        if (!d.events.includes('bluenergy') && !d.events.includes('tv')) return;
+        const isBE = d.events.includes('bluenergy');
+        const x0 = x.getPixelForValue(i) - width / weeklyData.length / 2;
+        const xw = width / weeklyData.length;
+        ctx.save();
+        ctx.fillStyle = isBE ? 'rgba(229,34,23,0.07)' : 'rgba(229,34,23,0.03)';
+        ctx.fillRect(x0, top, xw, bottom - top);
+        ctx.restore();
+      });
+    }
+  };
+
+  const ctx = document.getElementById('timelineChart').getContext('2d');
+  new Chart(ctx, {
+    type: 'line',
+    plugins: [bgPlugin],
+    data: {
+      labels,
+      datasets: [
+        { label: 'Click "bluenergy"', data: clicks, borderColor: RED, backgroundColor: RED + '15', borderWidth: 2.5, pointRadius: 4, pointHoverRadius: 6, pointBackgroundColor: RED, tension: 0.3, fill: true, yAxisID: 'y', order: 1 },
+        { label: 'Impression "bluenergy"', data: impr, borderColor: BLUE, backgroundColor: 'transparent', borderWidth: 2, pointRadius: 3, pointHoverRadius: 5, pointBackgroundColor: BLUE, tension: 0.3, fill: false, yAxisID: 'y1', order: 2 },
+        { label: 'Share Ep.1 (%)', data: share1, borderColor: GREEN, backgroundColor: 'transparent', borderWidth: 1.5, borderDash: [4,4], pointRadius: 3, pointHoverRadius: 5, pointBackgroundColor: GREEN, tension: 0.2, fill: false, yAxisID: 'y2', order: 3 },
+        { label: 'Share Ep.2 (%)', data: share2, borderColor: ORANGE, backgroundColor: 'transparent', borderWidth: 1.5, borderDash: [3,3], pointRadius: 3, pointHoverRadius: 5, pointBackgroundColor: ORANGE, tension: 0.2, fill: false, yAxisID: 'y2', order: 4 },
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { labels: { color: GRAY_TICK, font: { size: 11, family: 'Figtree' }, boxWidth: 14, padding: 16 } },
+        tooltip: {
+          ...lightTooltip,
+          callbacks: {
+            title: items => { const d = weeklyData[items[0].dataIndex]; return d.date ? `${d.label} · ${d.date}` : d.label; },
+            afterBody: items => {
+              const d = weeklyData[items[0].dataIndex];
+              const lines = [];
+              if (d.puntata) lines.push(`TV: ${d.puntata}`);
+              if (d.ep1viewers) lines.push(`   Spettatori: ${(d.ep1viewers/1000).toFixed(0)}K`);
+              if (d.events.includes('ig1')) lines.push('IG: Post 15 Dic (125K views)');
+              if (d.events.includes('ig2')) lines.push('IG: Post 20 Feb (190K views)');
+              if (d.events.includes('bluenergy')) lines.push('PUNTATA PROVA BLUENERGY');
+              return lines;
+            }
+          }
+        }
+      },
+      scales: {
+        x: { grid: { color: GRAY_GRID }, ticks: { color: GRAY_TICK, font: { size: 10, family: 'Figtree' }, maxRotation: 40, minRotation: 30 }, border: { display: false } },
+        y: { position: 'left', grid: { color: GRAY_GRID }, ticks: { color: RED, font: { size: 10, family: 'Figtree' } }, border: { display: false }, title: { display: true, text: 'Click', color: RED, font: { size: 10 } } },
+        y1: { position: 'right', grid: { drawOnChartArea: false }, ticks: { color: BLUE, font: { size: 10, family: 'Figtree' } }, border: { display: false }, title: { display: true, text: 'Impression', color: BLUE, font: { size: 10 } } },
+        y2: { position: 'right', grid: { drawOnChartArea: false }, ticks: { color: GREEN, font: { size: 10, family: 'Figtree' }, callback: v => v + '%' }, border: { display: false }, min: 0, max: 8, title: { display: true, text: 'Share %', color: GREEN, font: { size: 10 } } }
+      }
+    }
+  });
+
+  // Share chart
+  const episodeLabels = ['P1E1\n11Dic','P1E2','P2E3\n18Dic','P2E4','P3E5\n25Dic','P3E6','P4E7\n1Gen','P4E8','P5E9\n8Gen','P5E10','P6E11\n15Gen','P6E12','P7E13\n22Gen','P7E14','P8E15\n29Gen','P8E16','P9E17\n5Feb','P9E18','P10E19\n12Feb','P10E20','SFE21\n19Feb','SFE22'];
+  const shareValues = [3.40,3.80,2.90,3.80,null,null,3.70,4.80,3.80,4.60,4.00,4.50,3.60,4.30,3.80,4.40,3.20,4.10,3.70,4.40,3.70,4.70];
+  const bgColors = shareValues.map((v,i) => (i===20||i===21) ? RED : '#DDD');
+  const ctx2 = document.getElementById('shareChart').getContext('2d');
+  new Chart(ctx2, {
+    type: 'bar',
+    data: { labels: episodeLabels, datasets: [{ label: 'Share %', data: shareValues, backgroundColor: bgColors, borderRadius: 3, borderSkipped: false }] },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: { ...lightTooltip, callbacks: {
+          label: c => c.parsed.y !== null ? `Share: ${c.parsed.y.toFixed(2)}%` : 'Dato non disponibile',
+          afterLabel: c => (c.dataIndex===20||c.dataIndex===21) ? 'Puntata Prova Bluenergy' : ''
+        }}
+      },
+      scales: {
+        x: { grid: { display: false }, ticks: { color: GRAY_TICK, font: { size: 9, family: 'Figtree' }, maxRotation: 0 }, border: { display: false } },
+        y: { grid: { color: GRAY_GRID }, min: 0, max: 6, ticks: { color: GRAY_TICK, font: { size: 10, family: 'Figtree' }, callback: v => v + '%' }, border: { display: false } }
+      }
+    }
+  });
+
+  // Weekly table
+  const tbody = document.getElementById('weeklyTableBody');
+  weeklyData.forEach((row, i) => {
+    const prev = i > 0 ? weeklyData[i-1] : null;
+    const dC = prev ? ((row.clicks - prev.clicks) / prev.clicks * 100).toFixed(0) : null;
+    const dI = prev ? ((row.impr - prev.impr) / prev.impr * 100).toFixed(0) : null;
+    const pC = dC !== null ? parseInt(dC) >= 0 : null;
+    const pI = dI !== null ? parseInt(dI) >= 0 : null;
+    const isBE = row.events.includes('bluenergy');
+    const isTV = row.events.includes('tv');
+    const isIG = row.events.includes('ig1') || row.events.includes('ig2');
+    const evtBadges = [];
+    if (isBE) evtBadges.push(`<span style="background:var(--red-light);color:var(--red);font-size:9px;font-weight:700;padding:2px 8px;border-radius:4px;border:1px solid rgba(229,34,23,0.3);">BLUENERGY</span>`);
+    else if (isTV) evtBadges.push(`<span style="background:var(--gray-light);color:var(--gray);font-size:9px;font-weight:700;padding:2px 8px;border-radius:4px;">TV</span>`);
+    if (isIG) evtBadges.push(`<span style="background:#FCE9F0;color:var(--pink);font-size:9px;font-weight:700;padding:2px 8px;border-radius:4px;">IG</span>`);
+    const rowBg = isBE ? 'rgba(229,34,23,0.04)' : 'transparent';
+    const sc1 = row.ep1share !== null ? `<span style="color:${row.ep1share>=4?GREEN:'#aaa'};font-weight:${row.ep1share>=4?700:400}">${row.ep1share.toFixed(2)}%</span>` : '<span style="color:#ccc">n.d.</span>';
+    const sc2 = row.ep2share !== null ? `<span style="color:${row.ep2share>=4.5?GREEN:'#aaa'};font-weight:${row.ep2share>=4.5?700:400}">${row.ep2share.toFixed(2)}%</span>` : '<span style="color:#ccc">n.d.</span>';
+    const vc = row.ep1viewers ? `<span style="color:var(--gray)">${(row.ep1viewers/1000).toFixed(0)}K</span>` : '<span style="color:#ccc">—</span>';
+    tbody.innerHTML += `<tr style="background:${rowBg}${isBE?';border-left:3px solid var(--red)':''}">
+      <td style="color:${isBE?'var(--dark)':'var(--gray)'};font-weight:${isBE?700:400};white-space:nowrap;">${row.date||'—'}</td>
+      <td style="white-space:nowrap;color:${isBE?'var(--red)':'var(--gray)'};font-size:11px;font-weight:${isBE?700:400}">${row.puntata||'—'}</td>
+      <td style="max-width:180px;">${evtBadges.join(' ')||'<span style="color:#ccc;font-size:11px">—</span>'}</td>
+      <td style="color:var(--dark);font-weight:${isBE?700:600}">${row.clicks.toLocaleString('it-IT')}</td>
+      <td>${dC!==null?`<span class="badge-var ${pC?'pos':'neg'}">${pC?'+':''}${dC}%</span>`:'<span style="color:#ccc">—</span>'}</td>
+      <td style="color:${isBE?BLUE:'var(--gray)'}">${row.impr.toLocaleString('it-IT')}</td>
+      <td>${dI!==null?`<span class="badge-var ${pI?'pos':'neg'}">${pI?'+':''}${dI}%</span>`:'<span style="color:#ccc">—</span>'}</td>
+      <td>${sc1}</td><td>${sc2}</td><td>${vc}</td>
+    </tr>`;
+  });
+  window.timelineChartRendered = true;
+}
+
+// ── CORRELATION CHART ──
+function renderCorrChart() {
+  const labels = weeklyData.map(d => d.label);
+  const clicks = weeklyData.map(d => d.clicks);
+  const avgShare = weeklyData.map(d => {
+    if (d.ep1share && d.ep2share) return ((d.ep1share + d.ep2share) / 2);
+    if (d.ep1share) return d.ep1share;
+    return null;
+  });
+
+  const ctx = document.getElementById('corrChart').getContext('2d');
+  new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [
+        {
+          label: 'Click brand "bluenergy"',
+          data: clicks,
+          backgroundColor: weeklyData.map(d => d.events.includes('bluenergy') ? RED : d.events.includes('tv') ? RED + '55' : '#DDD'),
+          borderRadius: 6,
+          borderSkipped: false,
+          yAxisID: 'y',
+          order: 2,
+        },
+        {
+          label: 'Share TV medio (%)',
+          data: avgShare,
+          type: 'line',
+          borderColor: GREEN,
+          backgroundColor: GREEN + '20',
+          borderWidth: 2.5,
+          pointRadius: 5,
+          pointHoverRadius: 7,
+          pointBackgroundColor: avgShare.map((v,i) => weeklyData[i].events.includes('bluenergy') ? RED : GREEN),
+          tension: 0.3,
+          fill: true,
+          yAxisID: 'y2',
+          order: 1,
+        }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { labels: { color: GRAY_TICK, font: { size: 11, family: 'Figtree' }, boxWidth: 14, padding: 16 } },
+        tooltip: {
+          ...lightTooltip,
+          callbacks: {
+            afterBody: items => {
+              const d = weeklyData[items[0].dataIndex];
+              const out = [];
+              if (d.events.includes('bluenergy')) out.push('PUNTATA PROVA BLUENERGY');
+              else if (d.events.includes('tv')) out.push('Puntata TV in onda');
+              if (d.events.includes('ig1') || d.events.includes('ig2')) out.push('Post Instagram pubblicato');
+              return out;
+            }
+          }
+        }
+      },
+      scales: {
+        x: { grid: { color: GRAY_GRID }, ticks: { color: GRAY_TICK, font: { size: 10, family: 'Figtree' }, maxRotation: 40, minRotation: 30 }, border: { display: false } },
+        y: { position: 'left', grid: { color: GRAY_GRID }, ticks: { color: RED, font: { size: 10, family: 'Figtree' } }, border: { display: false }, title: { display: true, text: 'Click brand', color: RED, font: { size: 10 } } },
+        y2: { position: 'right', grid: { drawOnChartArea: false }, ticks: { color: GREEN, font: { size: 10, family: 'Figtree' }, callback: v => v + '%' }, border: { display: false }, min: 0, max: 8, title: { display: true, text: 'Share TV %', color: GREEN, font: { size: 10 } } }
+      }
+    }
+  });
+  window.corrChartRendered = true;
+
+  // Correlation table
+  const corrRows = [
+    { week: '08–14 Dic', event: 'Prima puntata TV', clicks: 706,  delta: '+37% vs pre-TV', share: '3,4% / 3,8%', ig: false, intensity: 45 },
+    { week: '15–21 Dic', event: 'Post IG 15 Dic',   clicks: 968,  delta: '+37% vs sett. prec.', share: '2,9% / 3,8%', ig: true,  intensity: 65 },
+    { week: '19–25 Gen', event: 'Puntata 7',         clicks: 812,  delta: '—',  share: '3,6% / 4,3%', ig: false, intensity: 30 },
+    { week: '9–15 Feb',  event: 'Puntata 10',        clicks: 1043, delta: '+17% vs media', share: '3,7% / 4,4%', ig: false, intensity: 55 },
+    { week: '16–22 Feb', event: 'PUNTATA BLUENERGY + IG', clicks: 1198, delta: '+15% vs sett. prec.', share: '3,7% / 4,7%', ig: true, intensity: 100 },
+    { week: '23 Feb–1 Mar', event: 'Post-puntata (effetto long tail)', clicks: 1050, delta: '-12% vs picco', share: 'n.d.', ig: false, intensity: 70 },
+  ];
+  const tb = document.getElementById('corrTable');
+  corrRows.forEach(r => {
+    const isBE = r.intensity === 100;
+    const badgeClass = isBE ? 'peak' : r.ig ? 'ig' : 'tv';
+    const badgeLabel = isBE ? 'PEAK' : r.ig ? 'TV+IG' : 'TV';
+    tb.innerHTML += `<tr style="background:${isBE?'rgba(229,34,23,0.04)':'transparent'}">
+      <td style="color:var(--gray);white-space:nowrap;">${r.week}</td>
+      <td style="color:${isBE?'var(--red)':'var(--dark)'};font-weight:${isBE?700:500};">${r.event}</td>
+      <td style="font-size:16px;font-weight:800;color:${isBE?'var(--red)':'var(--dark)'};">${r.clicks.toLocaleString('it-IT')}</td>
+      <td><span class="badge-var pos">${r.delta}</span></td>
+      <td style="color:var(--gray);font-size:12px;">${r.share}</td>
+      <td style="color:${r.ig?'var(--pink)':'var(--gray)'};font-weight:${r.ig?700:400};font-size:12px;">${r.ig?'Sì':'No'}</td>
+      <td>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <div style="flex:1;height:6px;background:var(--gray-light);border-radius:3px;overflow:hidden;">
+            <div style="width:${r.intensity}%;height:100%;background:${isBE?'var(--red)':r.intensity>60?RED+'99':'#CCC'};border-radius:3px;"></div>
+          </div>
+          <span class="corr-badge ${badgeClass}">${badgeLabel}</span>
+        </div>
+      </td>
+    </tr>`;
+  });
+}
+</script>
+</body>
+</html>
